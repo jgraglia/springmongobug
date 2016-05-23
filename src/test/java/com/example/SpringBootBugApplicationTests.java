@@ -1,18 +1,14 @@
 package com.example;
 
-import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -31,52 +27,75 @@ public class SpringBootBugApplicationTests {
     @Autowired
     private MongoTemplate template;
 
-    private final DynamicPropertiesEntity a = DynamicPropertiesEntity.builder().id("a").detail("akey", "hello").build();
-    private final DynamicPropertiesEntity b = DynamicPropertiesEntity.builder().id("b").detail("akey", "world").build();
+    private final DynamicPropertiesEntity hello = DynamicPropertiesEntity.builder().id("hello")
+            .detail("akey", "hello")
+            .genericDetail("akey", "hello")
+            .build();
+    private final DynamicPropertiesEntity world = DynamicPropertiesEntity.builder().id("world")
+            .detail("akey", "world")
+            .genericDetail("akey", "world")
+            .build();
 
     @Test
     @DirtiesContext
     public void ensure_can_find_by_static_property() {
-        template.save(a);
-        template.save(b);
+        template.save(hello);
+        template.save(world);
         Query query = new Query();
-        query.addCriteria(Criteria.where("id").is("b"));
+        query.addCriteria(Criteria.where("id").is("world"));
 
         DynamicPropertiesEntity entity = template.findOne(query, DynamicPropertiesEntity.class);
 
-        assertThat(entity).isEqualTo(b);
+        assertThat(entity).isEqualTo(world);
     }
 
     @Test
     @DirtiesContext
     public void ensure_can_find_by_dynamic_property_with_spring_mongo_api() {
-        template.save(a);
-        template.save(b);
-        final Query query = createDynamicQuery();
+        template.save(hello);
+        template.save(world);
+        final Query query = createDynamicHelloQuery();
 
         DynamicPropertiesEntity entity = template.findOne(query, DynamicPropertiesEntity.class);
 
-        assertThat(entity).isEqualTo(a);
+        assertThat(entity).isEqualTo(hello);
+    }
+
+    @Test
+    @DirtiesContext
+    public void ensure_can_find_by_dynamic_generic_property_with_spring_mongo_api() {
+        template.save(hello);
+        template.save(world);
+        final Query query = createDynamicGenericHelloQuery();
+
+        DynamicPropertiesEntity entity = template.findOne(query, DynamicPropertiesEntity.class);
+
+        assertThat(entity).isEqualTo(hello);
     }
 
     @Test
     @DirtiesContext
     public void ensure_can_find_by_dynamic_property_with_raw_mongo_api() {
-        template.save(a);
-        template.save(b);
-        final Query query = createDynamicQuery();
+        template.save(hello);
+        template.save(world);
+        final Query query = createDynamicHelloQuery();
         final DBCollection collection = template.getCollection(template.getCollectionName(DynamicPropertiesEntity.class));
 
         final DBCursor cursor = collection.find(query.getQueryObject());
 
         assertThat(cursor.hasNext()).isTrue();
         final DBObject item = cursor.next();
-        assertThat(item.get("_id")).isEqualTo("a");
+        assertThat(item.get("_id")).isEqualTo("hello");
         assertThat((Map) item.get("details")).containsEntry("akey", "hello");
         assertThat(cursor.hasNext()).isFalse();
     }
 
-    private Query createDynamicQuery() {
+    private Query createDynamicGenericHelloQuery() {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("genericDetails.akey").is("hello"));
+        return query;
+    }
+    private Query createDynamicHelloQuery() {
         Query query = new Query();
         query.addCriteria(Criteria.where("details.akey").is("hello"));
         return query;

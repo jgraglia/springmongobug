@@ -15,4 +15,8 @@ public class DynamicPropertiesEntity {
 
     @Singular
     private final Map details;
+
+    @Singular
+    private final Map<String, Object> genericDetails;
+
 }
