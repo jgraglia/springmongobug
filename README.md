@@ -1,4 +1,4 @@
-# springmongobug
+# springmongobug (or misusage?)
 
 I'm facing a problem while trying to query a document with some dynamic properties (ie. not known in the Java entity)
 
