@@ -17,6 +17,10 @@ See **ensure_can_find_by_dynamic_property_with_spring_mongo_api** and
 
 # Fix
 
+I try to update mongo, spring mongo, spring, spring boot version with no luck.
+
+I also try to remove Lombok (snif) or even to use @Document, but still no luck.
+
 The pb was that I did not declare the generic types of my map. Therefore the null "owning type".
 
 No pb with *genericDetails* !
@@ -26,3 +30,5 @@ No pb with *genericDetails* !
 
     @Singular
     private final Map<String, Object> genericDetails;
+
+And I can still use Lombok, and no @Document annotation!
